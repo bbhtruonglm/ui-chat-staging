@@ -1,0 +1,632 @@
+<template>
+  <SlashQuareIcon
+    id="chat__quick-answer__btn"
+    v-if="!isVisibleSendBtn?.()"
+    v-tooltip="$t('v1.view.main.dashboard.chat.action.open_quick_anwser')"
+    @click="clickBtnOpenQuickAnswer"
+    class="text-slate-400 w-5 h-5 cursor-pointer my-1.5 flex-shrink-0"
+  />
+  <Teleport
+    to="body"
+    v-if="commonStore.is_show_quick_answer"
+  >
+    <div
+      id="chat__quick-answer__modal"
+      v-show="list_answer?.length"
+      @click="toggleModal(true)"
+      class="absolute top-0 left-0 w-screen h-screen z-20"
+    >
+      <div
+        ref="modal_content_ref"
+        @click.stop
+        class="bg-white absolute shadow-lg rounded-xl h-[408px] overflow-hidden flex flex-col py-1 px-3 gap-1 bottom-[73px]"
+      >
+        <div
+          v-if="is_loading"
+          class="absolute left-1/2 -translate-x-1/2"
+        >
+          <Loading />
+        </div>
+        <div class="flex justify-between py-1 flex-shrink-0 text-sm border-b">
+          <div class="font-semibold">
+            {{ $t('v1.view.main.dashboard.chat.quick_answer.enter') }}
+          </div>
+          <div class="text-gray-500 flex items-center gap-3">
+            {{ $t('v1.view.main.dashboard.chat.quick_answer.guild') }}
+            <CogIcon
+              v-if="orgStore.isAdminOrg()"
+              v-tooltip="$t('v1.common.setting')"
+              @click="$external_site.openPageSetting('quick-reply')"
+              class="w-6 h-6 text-black cursor-pointer"
+            />
+          </div>
+        </div>
+        <div class="overflow-y-auto flex flex-col py-2 gap-2">
+          <button
+            v-for="answer of list_answer"
+            :id="answer.id"
+            @click="selectQuickAnswer(answer)"
+            :class="{
+              'bg-slate-100': answer.id === selected_answer_id,
+            }"
+            class="py-1 px-2 gap-3 rounded-lg flex hover:bg-slate-100"
+          >
+            <div class="p-2.5 rounded-lg border bg-white flex-shrink-0">
+              <AiBoldIcon
+                v-if="answer.is_ai"
+                class="w-6 h-6"
+              />
+              <TextIcon
+                v-else
+                class="w-6 h-6"
+              />
+            </div>
+            <div class="flex-grow min-w-0 text-sm text-left">
+              <div class="font-semibold truncate">/{{ answer.title }}</div>
+              <div class="text-slate-500 truncate">
+                <span
+                  v-if="answer.is_ai"
+                  class="font-medium"
+                >
+                  {{ $t('v1.view.main.dashboard.chat.quick_answer.ai') }}
+                </span>
+                {{ answer.content }}
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+</template>
+<script setup lang="ts">
+import { computed, inject, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import {
+  useConversationStore,
+  useMessageStore,
+  useCommonStore,
+  useOrgStore,
+} from '@/stores'
+import { nonAccentVn } from '@/service/helper/format'
+import { last, size, sortBy } from 'lodash'
+import { IS_VISIBLE_SEND_BTN_FUNCT } from '@/views/ChatWarper/Chat/CenterContent/InputChat/symbol'
+import { useI18n } from 'vue-i18n'
+import { getPageInfo, getStaffInfo } from '@/service/function'
+import { toastError } from '@/service/helper/alert'
+import { gen_answer, text_translate } from '@/service/api/chatbox/ai'
+import { QuickAnswer } from '@/utils/api/Widget'
+import { container } from 'tsyringe'
+import { ExternalSite } from '@/utils/helper/ExternalSite'
+import { composableService as inputComposableService } from '@/views/ChatWarper/Chat/CenterContent/InputChat/MainInput/service'
+
+import Loading from '@/components/Loading.vue'
+
+import SlashQuareIcon from '@/components/Icons/SlashQuare.vue'
+import AiBoldIcon from '@/components/Icons/AiBold.vue'
+import TextIcon from '@/components/Icons/Text.vue'
+import CogIcon from '@/components/Icons/Cog.vue'
+
+import type { QuickAnswerInfo } from '@/service/interface/app/message'
+import type { SourceChat } from '@/service/interface/app/ai'
+import type { WidgetEventData } from '@/service/interface/app/widget'
+
+const { InputService } = inputComposableService()
+
+const conversationStore = useConversationStore()
+const messageStore = useMessageStore()
+const commonStore = useCommonStore()
+const { t: $t } = useI18n()
+const orgStore = useOrgStore()
+const $external_site = container.resolve(ExternalSite)
+const $input_service = container.resolve(InputService)
+
+/**cache câu trả lời, hạnc chế gọi API liên tục mỗi lần click */
+const CACHE_LIST_ANSWER = new Map<string, QuickAnswerInfo[]>()
+/**số câu trả lời tối đa sẽ lấy */
+const MAX_ANSWER = 200
+/**các tính năng AI */
+const AI_FEATURE: QuickAnswerInfo[] = [
+  {
+    id: 'translate',
+    title: 'dich',
+    content: $t('v1.view.main.dashboard.chat.quick_answer.translate'),
+    is_ai: true,
+  },
+  {
+    id: 'complete',
+    title: 'hoanthanh',
+    content: $t('v1.view.main.dashboard.chat.quick_answer.auto_complete'),
+    is_ai: true,
+  },
+]
+
+/**ref của nội dung modal */
+const modal_content_ref = ref<HTMLDivElement>()
+/** Danh sách trả lời nhanh */
+const list_answer = ref<QuickAnswerInfo[]>([])
+/** Trạng thái loading */
+const is_loading = ref(false)
+/** Id của answer đang được chọn */
+const selected_answer_id = ref<string>('')
+/** Index của answer đang được chọn */
+const selected_answer_index = ref(0)
+
+/**id trang đang được chọn */
+const page_id = computed(
+  () => conversationStore.select_conversation?.fb_page_id
+)
+/**id khách đang được chọn */
+const client_id = computed(
+  () => conversationStore.select_conversation?.fb_client_id
+)
+
+/**có hiển thị nút gửi tin không */
+const isVisibleSendBtn = inject(IS_VISIBLE_SEND_BTN_FUNCT)
+
+/**click vào nút mở modal */
+function clickBtnOpenQuickAnswer() {
+  // thêm / vào input chat
+  $input_service.setInputText('/')
+
+  // hiện modal
+  toggleModal()
+}
+/** ẩn hiện modal */
+function toggleModal(is_clear_input?: boolean) {
+  // thay đổi trạng thái hiển thị modal
+  commonStore.is_show_quick_answer = !commonStore.is_show_quick_answer
+
+  // modal mở hay tắt thì đều focus vào input chat
+  focusChat()
+
+  // nếu mở modal thì lấy dữ liệu trả lời nhanh
+  if (commonStore.is_show_quick_answer) {
+    changeModalPosition()
+    getQuickAnswer()
+  }
+
+  /**input chat */
+  const INPUT_CHAT = document.getElementById('chat-text-input-message')
+
+  // nếu không có input chat thì thôi
+  if (!INPUT_CHAT) return
+
+  // xóa nội dung input nếu được yêu cầu
+  if (is_clear_input && INPUT_CHAT.innerText === '/')
+    $input_service.setInputText('')
+}
+/**thay đổi vị chí, kích thước của modal cho vừa với input chat */
+async function changeModalPosition() {
+  // chờ vue render modal xong mới chạy
+  await new Promise(resolve => nextTick(() => resolve(undefined)))
+
+  /**mục tiêu */
+  const INPUT_CHAT_WARPER = document.getElementById('main_input_chat')
+
+  // nếu không có mục tiêu thì thôi
+  if (!INPUT_CHAT_WARPER || !modal_content_ref.value) return
+
+  // lấy vị trí, kích thước của mục tiêu
+  const { x, width } = INPUT_CHAT_WARPER.getBoundingClientRect()
+
+  // đặt độ rộng của modal bằng với mục tiêu
+  modal_content_ref.value.style.setProperty('width', `${width}px`)
+
+  // dịch chuyển modal đến vị trí mục tiêu
+  modal_content_ref.value.style.setProperty('left', `${x}px`)
+}
+/** Lấy dữ liệu trả lời nhanh */
+async function getQuickAnswer() {
+  try {
+    // nếu không có id trang thì thôi
+    if (!page_id.value) return
+
+    // nếu đã cache dữ liệu rồi thì thôi không gọi api nữa
+    if (CACHE_LIST_ANSWER.has(page_id.value)) {
+      // lấy dữ liệu trong cache
+      list_answer.value = CACHE_LIST_ANSWER.get(page_id.value) || []
+
+      return
+    }
+
+    // bật loading
+    is_loading.value = true
+
+    // gọi api lấy dữ liệu câu trả lời
+    const ANSWERS = await new QuickAnswer(page_id.value).readAnswer(
+      0,
+      MAX_ANSWER
+    )
+
+    // sắp xếp
+    list_answer.value = sortBy(ANSWERS, 'index')
+
+    // thêm tính năng AI lên đầu trả lời nhanh
+    list_answer.value?.unshift(...AI_FEATURE)
+
+    // cache lại dữ liệu
+    CACHE_LIST_ANSWER.set(page_id.value, list_answer.value)
+
+    // chọn câu đầu đầu tiên
+    setDefaultQuickAnswer()
+
+    // tắt loading
+    is_loading.value = false
+  } catch (e) {
+    // tắt loading
+    is_loading.value = false
+  }
+}
+/** Tìm kiếm câu trả lời nhanh khi nhập trong input chat */
+function seachQuickAnswer(search_value?: string) {
+  // nếu không có id trang thì thôi
+  if (!page_id.value) return
+
+  // nạp lại dữ liệu mới nhất từ cache
+  list_answer.value = CACHE_LIST_ANSWER.get(page_id.value) || []
+
+  // nếu không có giá trị tìm kiếm thì tự động chọn câu đầu đầu tiên
+  if (!search_value) return setDefaultQuickAnswer()
+
+  /**giá trị tìm kiếm đã được xử lý */
+  const SEARCH_VALUE = nonAccentVn(search_value)
+
+  // tìm kiếm theo tiêu đề của câu trả lời
+  list_answer.value = list_answer.value.filter(answer =>
+    nonAccentVn(answer?.title || '')?.includes(SEARCH_VALUE)
+  )
+
+  // tự động chọn câu đầu đầu tiên
+  setDefaultQuickAnswer()
+}
+/**focus vào input chat */
+function focusChat() {
+  document.getElementById('chat-text-input-message')?.focus()
+}
+/**chọn trả lời nhanh */
+function selectQuickAnswer(answer: QuickAnswerInfo) {
+  /**nội dung của câu trả lời nhanh này */
+  let { id, content, list_images, is_ai } = answer
+
+  //  xử lý AI
+  if (is_ai) return handleAi(id)
+
+  /**input chat mục tiêu */
+  const INPUT_CHAT = document.getElementById('chat-text-input-message')
+
+  // nếu không có nội dung thì thôi
+  if (!content || !INPUT_CHAT) return
+
+  // thay đổi nội dung template dang {{xxx}} thành giá trị thực nếu có
+  content = replaceTemplateMessage(content)
+
+  // gán giá trị vào input
+  $input_service.setInputText(content)
+
+  // nếu trả lời nhanh có ảnh thì thêm vào danh sách tập tin đính kèm
+  if (size(list_images))
+    messageStore.upload_file_list =
+      list_images?.map(url => ({
+        type: 'image',
+        is_done: false,
+        is_loading: false,
+        preview: url,
+        url,
+      })) || []
+
+  // tắt modal
+  commonStore.is_show_quick_answer = false
+
+  // focus vào lại input chat
+  focusChat()
+}
+/**xử lý AI */
+function handleAi(action?: string) {
+  // nếu không có hành động gì thì thôi
+  if (!action) return
+
+  // xử lý hành động
+  switch (action) {
+    case 'translate':
+      transalate()
+      break
+    case 'complete':
+      complete()
+      break
+  }
+}
+/**dịch nội dung */
+async function transalate() {
+  // nếu đang loading thì thôi
+  if (messageStore.is_input_run_ai || !page_id.value) return
+
+  // đánh dấu đang chạy AI
+  messageStore.is_input_run_ai = true
+
+  try {
+    // tắt modal
+    commonStore.is_show_quick_answer = false
+
+    // focus vào lại input chat
+    focusChat()
+
+    /**input chat */
+    const INPUT_CHAT = document.getElementById('chat-text-input-message')
+
+    // nếu không có input chat thì thôi
+    if (!INPUT_CHAT) throw 'DONE'
+
+    /**nội dung chat */
+    let text = INPUT_CHAT?.innerText
+
+    // nếu chỉ có '/' thì xóa luôn để tránh lỗi
+    if (text?.trim() === '/') text = ''
+
+    // xóa dấu /dich ở cuối câu, loại bỏ khoảng trắng
+    text = text?.trim()?.replace(/\/(?:d(?:ich|ic|i)?|\/)?$/, '')
+
+    // cập nhật lại input trước 1 lần
+    $input_service.setInputText(text)
+
+    // check lại nếu không có nội dung thì thôi
+    if (!text) throw 'DONE'
+
+
+    // gọi api dịch
+    const RES = await text_translate({
+      from: 'vn',
+      to: 'en',
+      text,
+      page_id: page_id.value,
+      client_id: client_id.value,
+    })
+
+    // nếu không có dữ liệu thì thôi
+    if (!RES?.text)
+      throw $t('v1.view.main.dashboard.chat.quick_answer.translate_error')
+
+    // thay đổi nội dung chat thành dịch, nếu chưa bị huỷ
+    if (messageStore.is_input_run_ai) $input_service.setInputText(RES.text)
+  } catch (e) {
+    // hiển thị thông báo lỗi
+    if (e !== 'DONE') toastError(e)
+  }
+
+  // đánh dấu AI đã chạy xong
+  messageStore.is_input_run_ai = false
+}
+/**hoàn thành câu */
+async function complete() {
+  // nếu đang loading thì thôi
+  if (
+    messageStore.is_input_run_ai ||
+    !messageStore.list_message ||
+    !page_id.value
+  )
+    return
+
+  // đánh dấu đang chạy AI
+  messageStore.is_input_run_ai = true
+
+  try {
+    // tắt modal
+    commonStore.is_show_quick_answer = false
+
+    // focus vào lại input chat
+    focusChat()
+
+    /**nội dung chat */
+    const SOURCE: SourceChat[] = messageStore.list_message
+      ?.filter(message => message?.message_text)
+      ?.filter(message => ['page', 'client'].includes(message?.message_type))
+      ?.map(message => {
+        return {
+          type: message.message_type === 'client' ? 'CLIENT' : 'PAGE',
+          content: message.message_text || '',
+        }
+      })
+
+    /**input chat */
+    const INPUT_CHAT = document.getElementById('chat-text-input-message')
+
+    // nếu không có input chat thì thôi
+    if (!INPUT_CHAT) throw 'DONE'
+
+    /**nội dung chat */
+    let text = INPUT_CHAT?.innerText
+
+    // nếu không có nội dung thì thôi
+    if (!text) throw 'DONE'
+
+    // xóa dấu /hoanthanh ở cuối câu, loại bỏ khoảng trắng
+    text = text
+      .replace(
+        /\/(?:h(?:oanthanh|oanthan|oantha|oanth|oant|oan|oa|o)?|\/)?$/,
+        ''
+      )
+      .trim()
+
+    // cập nhật lại input trước 1 lần
+    $input_service.setInputText(text)
+
+    // gọi api tạo nội dung
+    const RES = await gen_answer({
+      source: SOURCE,
+      current: text,
+      page_id: page_id.value,
+      client_id: client_id.value,
+    })
+
+    // nếu không có dữ liệu thì thôi
+    if (!RES?.text)
+      throw $t('v1.view.main.dashboard.chat.quick_answer.complete_error')
+
+    // thay đổi nội dung mới vào input chat, nếu chưa bị huỷ
+    if (messageStore.is_input_run_ai) $input_service.setInputText(RES.text)
+  } catch (e) {
+    // hiển thị thông báo lỗi
+    if (e !== 'DONE') toastError(e)
+  }
+
+  // đánh dấu AI đã chạy xong
+  messageStore.is_input_run_ai = false
+}
+/**thay thế template message thành data của conversation */
+function replaceTemplateMessage(content: string) {
+  /**dữ liệu hội thoại đang được chọn */
+  const CONVERSATION = conversationStore.select_conversation
+
+  // loại bỏ các template chưa xử lý được
+  content = content
+    .replace(/#{{FIRST_NAME}}/g, '')
+    .replace(/#{{LAST_NAME}}/g, '')
+    .replace(/#{{STAFF_FIRST_NAME}}/g, '')
+    .replace(/#{{STAFF_LAST_NAME}}/g, '')
+    .replace(/#SEX\{\{[^|}]+\|[^|}]+\|[^|}]+\}\}/g, '')
+    .replace(/#\{\{[^|}]+\|[^|}]+\|[^|}]+\}\}/g, '')
+    .replace(/#\{\{TODAY\{[^}]+\}\}\}/g, '')
+
+  /**tên khách hàng */
+  const CLIENT_NAME = CONVERSATION?.client_origin_name || CONVERSATION?.client_name || ''
+  /**tên nhân viên */
+  const STAFF_NAME =
+    getStaffInfo(page_id.value, CONVERSATION?.fb_staff_id)?.name || ''
+  /**số điện thoại khách hàng */
+  const PHONE = CONVERSATION?.client_phone || ''
+  /**email khách hàng */
+  const EMAIL = CONVERSATION?.client_email || ''
+  /**tên trang */
+  const PAGE_NAME = getPageInfo(page_id.value)?.name || ''
+
+  return (
+    content
+      // tên khách hàng
+      .replace(/#{FULL_NAME}/g, CLIENT_NAME)
+      .replace(/#{{FULL_NAME}}/g, CLIENT_NAME)
+
+      // tên nhân viên chăm sóc
+      .replace(/#{STAFF_NAME}/g, STAFF_NAME)
+      .replace(/#{{STAFF_NAME}}/g, STAFF_NAME)
+
+      // số điện thoại khách hàng
+      .replace(/#{PHONE}/g, PHONE)
+      .replace(/#{{PHONE}}/g, PHONE)
+
+      // email khách hàng
+      .replace(/#{EMAIL}/g, EMAIL)
+      .replace(/#{{EMAIL}}/g, EMAIL)
+
+      // tên trang
+      .replace(/#{PAGE_NAME}/g, PAGE_NAME)
+      .replace(/#{{PAGE_NAME}}/g, PAGE_NAME)
+  )
+}
+/**cuộn tới vị trí trả lời nhanh đang chọn */
+function scrollIntoView(id: string) {
+  /**
+   * hàm scrollIntoViewIfNeeded không phải là hàm tiêu chuẩn, nên bị thiếu
+   * type
+   */
+  // @ts-ignore
+  document.getElementById(id)?.scrollIntoViewIfNeeded()
+}
+/**lắng nghe sự thay đổi của input chat, để điều khiển hoạt động của modal */
+function handleChatValue($event: KeyboardEvent) {
+  /**phím người dùng nhấn */
+  const KEY = $event.key
+  /**nội dung chat */
+  const INPUT_VALUE = ($event.target as HTMLDivElement)?.innerText
+
+  // nếu modal đã mở
+  if (commonStore.is_show_quick_answer) onModalShowed(KEY, INPUT_VALUE)
+  // nếu modal chưa mở
+  else onModalHid(INPUT_VALUE)
+}
+/**xử lý sự kiện khi modal đã hiển thị */
+function onModalShowed(key: string, value: string) {
+  /**số lượng câu trả lời */
+  const SIZE_LIST_ANSWER = list_answer.value?.length
+
+  // * bấm Esc thì tắt modal
+  if (key === 'Escape') return toggleModal()
+
+  // * bấm mũi tên xuống
+  if (key === 'ArrowDown') {
+    // nếu đã hết câu trả lời thì đặt index về -1 để quay lại ban đầu
+    if (selected_answer_index.value >= SIZE_LIST_ANSWER - 1)
+      selected_answer_index.value = -1
+
+    // chọn id câu trả lời tiếp theo, tăng index lên 1
+    selected_answer_id.value =
+      list_answer.value?.[++selected_answer_index.value]?.id || ''
+
+    // scroll đến vị trí
+    return scrollIntoView(selected_answer_id.value)
+  }
+
+  // * bấm Mũi tên lên
+  if (key === 'ArrowUp') {
+    // nếu là câu trả lời đầu tiên thì chạy xuống cuối
+    if (!selected_answer_index.value)
+      selected_answer_index.value = SIZE_LIST_ANSWER
+
+    // chọn câu trả lời tiếp theo, giảm index xuống 1
+    selected_answer_id.value =
+      list_answer.value?.[--selected_answer_index.value]?.id || ''
+
+    // scroll đến vị trí
+    return scrollIntoView(selected_answer_id.value)
+  }
+
+  // bấm Enter thì chọn câu trả lời nhanh đang được select
+  if (key === 'Enter')
+    return selectQuickAnswer(list_answer.value[selected_answer_index.value])
+
+  // nếu không có gạch mà đang mở thì tắt modal
+  if (!value.includes('/')) return toggleModal()
+
+  // tìm kiếm câu trả lời nhanh nếu đang mở modal
+  if (value?.includes('/')) seachQuickAnswer(last(value.split('/')))
+}
+/**xử lý sự kiện khi modal đã tắt / không hiển thị */
+function onModalHid(value: string) {
+  // nếu gõ gạch ở cuối câu mà chưa mở thì mở modal
+  if (!value.endsWith('/')) return
+
+  // mở modal
+  toggleModal()
+
+  // chọn câu đầu tiên nếu có
+  setDefaultQuickAnswer()
+}
+/**chọn câu trả lời nhanh mặc định */
+function setDefaultQuickAnswer() {
+  // nếu không có dữ liệu thì thôi
+  if (!list_answer.value?.length) return
+
+  // tự động lấy id của câu đầu tiên
+  selected_answer_id.value = list_answer.value?.[0]?.id || ''
+  // tự động đặt vị trí thành đầu tiên
+  selected_answer_index.value = 0
+}
+
+onMounted(() => window.addEventListener('message', onWidgetEvent))
+onUnmounted(() => window.removeEventListener('message', onWidgetEvent))
+
+/**xử lý dữ liệu widget truyền vào */
+function onWidgetEvent($event: MessageEvent<WidgetEventData>) {
+  // lấy ra các dữ liệu cần thiết
+  let { _type, content, list_images } = $event?.data
+
+  // chỉ xử lý dữ liệu từ widget
+  if (_type !== 'WIDGET') return true
+
+  /**nội dung văn bản, đã lọc bỏ cú pháp hình ảnh cũ */
+  const CONTENT = content?.split('\n\n##attachment##')?.[0]
+
+  // chạy logic chung vơi trả lời nhanh nội bộ
+  selectQuickAnswer({ content: CONTENT, list_images })
+}
+
+defineExpose({ toggleModal, handleChatValue })
+</script>

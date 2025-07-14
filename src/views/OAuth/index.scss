@@ -1,0 +1,15 @@
+.custom-input {
+  @apply flex h-10 w-full rounded-md border px-3 py-2 shadow-sm  placeholder:text-slate-500;
+}
+.custom-title {
+  @apply font-bold text-2xl flex items-center gap-2;
+}
+.custom-btn-black {
+  @apply rounded-md bg-black text-white shadow h-12 px-4 py-3 font-medium text-base w-full;
+}
+.custom-description {
+  @apply flex text-sm gap-3 items-center;
+}
+.custom-link {
+  @apply font-semibold flex items-center gap-1 text-blue-700 cursor-pointer;
+}

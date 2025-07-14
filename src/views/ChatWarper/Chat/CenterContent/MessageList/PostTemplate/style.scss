@@ -1,0 +1,9 @@
+.comment-item {
+  @apply bg-slate-100 rounded py-1 px-2 text-sm text-slate-900;
+}
+.btn {
+  @apply flex items-center justify-center rounded-md bg-slate-200 px-3 py-2 gap-1;
+  .icon {
+    @apply w-3 h-3 text-slate-900;
+  }
+}

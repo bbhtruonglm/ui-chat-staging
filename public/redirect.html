@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Bot Bán Hàng</title>
+</head>
+
+<body>
+    <!-- 
+        - file html này dùng để redirect chatbot v1 sang chatbot v2
+        - được lưu ở chỗ này cho dễ quản lý
+        - khi deploy sẽ được sao chép qua thư mục của chatbot v1
+    -->
+    <script>
+        // https://botbanhang.vn/chat/#/chat-box?page_id=100179064765476&user_id=6131478076934694
+        // https://botbanhang.vn/chat/#/platform
+        // https://botbanhang.vn/chat
+
+        /**thực hiện redirect */
+        function doRedirect() {
+            /**url của chatbot v2 */
+            const NEW_HOST = 'https://chat.botbanhang.vn'
+    
+            /**đường dẫn hiện tại*/
+            const CURRENT_URL = window.location.href
+    
+            /**phân tách url thành mảng*/
+            let split_url = CURRENT_URL.split('/#/')
+    
+            /**dữ liệu của path và query string */
+            let query
+            if (split_url.length > 1) query = split_url[1]
+    
+            if (
+                // nếu không có query thì redirect luôn
+                !query ||
+                // nếu path khong phải là chat-box thì redirect luôn
+                query.indexOf('chat-box?') !== 0
+            ) return window.location.href = NEW_HOST
+    
+            /**lấy ra query string của giao diện chat */
+            let query_string = query.replace('chat-box?', '')
+    
+            // redirect cùng với query string
+            return window.location.href = `${NEW_HOST}/#/chat?${query_string}`
+        }
+
+        doRedirect()
+    </script>
+</body>
+
+</html>

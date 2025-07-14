@@ -1,0 +1,14 @@
+<template>
+  <div
+    id="chat__left-bar"
+    class="bg-white w-[360px] rounded-xl flex flex-col overflow-hidden flex-shrink-0 p-2 gap-2"
+  >
+    <Header />
+    <Conversation />
+  </div>
+</template>
+
+<script setup lang="ts">
+import Conversation from '@/views/ChatWarper/Chat/LeftBar/Conversation.vue'
+import Header from '@/views/ChatWarper/Chat/LeftBar/Header.vue'
+</script>
