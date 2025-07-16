@@ -24,7 +24,7 @@ const ENV: IEnv = {
     media_cdn: 'https://retion-api.drinkocany.com/v1/n6_static/cdn',
     n13_zalo_personal: 'https://retion-api.drinkocany.com/v1/n13_zalo_personal',
     n13_zalo_personal_socket: 'wss://retion-api.drinkocany.com/zalo-personal-qr',
-    agent_config: 'https://bbh-setting-dev.vercel.app/embed/virtual-assistant',
+    agent_config: 'https://retion-setting.drinkocany.com/embed/virtual-assistant',
     merchant: {
       contact: 'https://api-contact.merchant.vn'
     }
