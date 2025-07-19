@@ -16,27 +16,27 @@ const ENV: IEnv = {
     ai: 'https://retion-api.drinkocany.com/v1/ai',
     chatbot: 'http://retion-chatbot-api.drinkocany.com/chatbot/v2/n3_service',
 
-    n4_service_v1: 'https://dev-api.botbanhang.vn/service',
-    n5_app_v1: '',
+    n4_service_v1: '',
+    n5_app_v1: 'https://wcss4s40o4g4c4wgc44w0gsw.35.198.216.143.sslip.io',
     n8_merge: '',
-    widget: '',
-    n8_merge_v2: 'https://dev-api.botbanhang.vn/v1/n8_merge',
+    widget: 'https://cwo4kg8s8okss448sgo4o4c8.35.198.216.143.sslip.io',
+    n8_merge_v2: '',
     media_cdn: 'https://retion-api.drinkocany.com/v1/n6_static/cdn',
     n13_zalo_personal: 'https://retion-api.drinkocany.com/v1/n13_zalo_personal',
     n13_zalo_personal_socket: 'wss://retion-api.drinkocany.com/zalo-personal-qr',
     agent_config: 'https://retion-setting.drinkocany.com/embed/virtual-assistant',
     merchant: {
-      contact: 'https://api-contact.merchant.vn'
+      contact: ''
     }
   },
   external_link: {
     setting: 'https://retion-setting.drinkocany.com',
     analytic: 'https://bbh-chart-nu.vercel.app',
     chatbot: 'https://retion-chatbot.drinkocany.com/#',
-    chatbox: 'https://chat-dev.botbanhang.vn',
-    download: 'https://sellingpage.net/download',
-    merchant: 'https://merchant.vn',
-    admin: 'https://dashboard-dev-ten.vercel.app',
+    chatbox: '',
+    download: '',
+    merchant: '',
+    admin: '',
   },
   facebook: {
     app_id: '1282108599314861',
