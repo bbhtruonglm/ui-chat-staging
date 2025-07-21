@@ -14,7 +14,7 @@ const ENV: IEnv = {
     n9_analytic_v2: 'https://retion-api.drinkocany.com/v1/n9_analytic_v2',
     billing: 'https://retion-api.drinkocany.com/v1/billing',
     ai: 'https://retion-api.drinkocany.com/v1/ai',
-    chatbot: 'http://retion-chatbot-api.drinkocany.com/chatbot/v2/n3_service',
+    chatbot: 'https://retion-chatbot-api.drinkocany.com/chatbot/v2/n3_service',
 
     n4_service_v1: '',
     n5_app_v1: 'https://wcss4s40o4g4c4wgc44w0gsw.35.198.216.143.sslip.io',
