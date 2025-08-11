@@ -37,7 +37,7 @@ export class EnvManage implements IEnvManage {
 
     // lấy cài đặt môi trường mới
     const { default: ENV } = (await import(
-      `../../configs/envs/${this.NODE_ENV}.ts`
+      '../../configs/envs/index'
     )) as { default: IEnv }
 
     // lưu cài đặt môi trường

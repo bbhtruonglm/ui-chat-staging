@@ -1,12 +1,14 @@
 <template>
+  <template v-for="menu of LIST_MENU">
   <MenuItem
-    v-for="menu of LIST_MENU"
+    v-if="menu.path !== 'pay' || IS_SHOW_PAYMENT"
     @click="$router.push(genOrgPath(menu.path))"
     :icon="menu.icon"
     :title="menu.title"
     :is_selected="$route.path.includes(genOrgPath(menu.path))"
     class_icon="w-5 h-5"
   />
+  </template>
 </template>
 <script setup lang="ts">
 import { markRaw } from 'vue'
@@ -22,6 +24,8 @@ import RetionAgentIcon from '@/components/Icons/RetionAgent.vue'
 import { ServerStackIcon } from '@heroicons/vue/24/solid'
 
 const { t: $t } = useI18n()
+
+const IS_SHOW_PAYMENT = $env.is_show_payment
 
 /**danh sách các menu */
 const LIST_MENU = [

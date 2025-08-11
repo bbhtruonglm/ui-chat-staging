@@ -59,18 +59,6 @@ declare global {
         auth_type?: string
         enable_profile_selector?: boolean
       }
-      /**cài đặt cho facebook v2 */
-      v2: {
-        /**id của app facebook */
-        app_id: string
-        /**cài đặt cho instagram */
-        instagram: {
-          /**đường dẫn khi redirect */
-          redirect_uri: string
-          /**các quyền của instagram */
-          scoped: string[]
-        }
-      }
     }
     /**cài đặt cho zalo oa */
     zalo_oa: {
@@ -90,17 +78,7 @@ declare global {
     platform: IPageType[]
     /**host của url link ảnh */
     img_host: string
-    /**AI */
-    ai: {
-      /**các widet trigger từ AI */
-      widget: {
-        /**tạo đơn hàng */
-        place_order: string
-        /**tạo giao dịch */
-        create_transaction: string
-        /**đặt lịch */
-        schedule_appointment: string
-      }
-    }
+    /** ẩn hiện thanh toán */
+    is_show_payment: boolean
   }
 }

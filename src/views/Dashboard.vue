@@ -20,7 +20,7 @@
             {{ $t('v1.view.main.dashboard.select_page.group_page.title') }}
           </button>
         </template>
-        <ReChargeBtn v-if="$route.path.includes('/dashboard/org/')" />
+        <ReChargeBtn v-if="$route.path.includes('/dashboard/org/') && IS_SHOW_PAYMENT" />
       </template>
     </Header>
     <div class="overflow-hidden h-full">
@@ -69,6 +69,9 @@ const selectPageStore = useSelectPageStore()
 const orgStore = useOrgStore()
 const pageManagerStore = usePageManagerStore()
 const $route = useRoute()
+
+/** có hiện phần thanh toán hay không */
+const IS_SHOW_PAYMENT = $env.is_show_payment
 
 const { ref_dropdown_pick_connect_platform, connect_page_ref } =
   storeToRefs(pageManagerStore)

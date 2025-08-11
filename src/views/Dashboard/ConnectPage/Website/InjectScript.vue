@@ -65,7 +65,7 @@ const script_ref = ref<HTMLPreElement>()
 
 /**tạo ra mã nhúng */
 function generateScript() {
-  return `&lt;script src="https://xow8cscockos4cc8oggg8co4.35.198.216.143.sslip.io/sdk.min.js"&gt;&lt;/script&gt;
+  return `&lt;script src="https://chatbox-embed-sdk.botbanhang.vn/dist/sdk.min.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   BBH.init({ page_id: '${$props.page_id}' })
 &lt;/script&gt;`
