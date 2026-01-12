@@ -94,7 +94,7 @@
                 v-if="message.message_text"
                 :text="message.message_text"
               />
-              <UnsupportMessage v-else />
+              <!-- <UnsupportMessage v-else /> -->
             </div>
             <template
               v-else-if="message.message_type === 'client' && message.ad_id"
@@ -112,7 +112,7 @@
               :message
               :message_index="index"
             />
-            <UnsupportMessage v-else />
+            <!-- <UnsupportMessage v-else /> -->
             <DoubleCheckIcon
               v-if="isLastPageMessage(message, index)"
               class="w-3 h-3 text-green-500 absolute -bottom-1.5 -right-11"
@@ -364,10 +364,11 @@ function socketNewMessage({ detail }: CustomEvent) {
   const LIST_MESSAGE = document.getElementById(messageStore.list_message_id)
 
   /** vị trí scroll */
-  const SCROLL_POSITION = (LIST_MESSAGE?.scrollTop || 0) + (LIST_MESSAGE?.clientHeight || 0)
+  const SCROLL_POSITION =
+    (LIST_MESSAGE?.scrollTop || 0) + (LIST_MESSAGE?.clientHeight || 0)
 
   /** có đang scroll xuống dưới cùng không? */
-  const IS_BOTTOM = SCROLL_POSITION ===  LIST_MESSAGE?.scrollHeight
+  const IS_BOTTOM = SCROLL_POSITION === LIST_MESSAGE?.scrollHeight
 
   // thêm tin nhắn vào danh sách
   messageStore.list_message.push(detail)
@@ -607,7 +608,9 @@ const tryLoadUntilScrollable = (cb: CbError) => {
       // Dùng nextTick nếu Vue chưa render kịp
       nextTick(() => {
         // lấy div chưa danh sách tin nhắn
-        const LIST_MESSAGE = document.getElementById(messageStore.list_message_id)
+        const LIST_MESSAGE = document.getElementById(
+          messageStore.list_message_id
+        )
 
         // nếu không có thì thôi
         if (!LIST_MESSAGE) return cb()
