@@ -42,9 +42,7 @@
                     class_toggle="peer-checked:bg-black"
                   >
                     <span class="text-green-600">
-                      {{
-                        $t('v1.view.main.dashboard.org.pay.upgrade.year')
-                      }}
+                      {{ $t('v1.view.main.dashboard.org.pay.upgrade.year') }}
                     </span>
                   </Toggle>
                 </template>
@@ -105,9 +103,7 @@
                     class_toggle="peer-checked:bg-black"
                   >
                     <span class="text-green-600">
-                      {{
-                        $t('v1.view.main.dashboard.org.pay.upgrade.year')
-                      }}
+                      {{ $t('v1.view.main.dashboard.org.pay.upgrade.year') }}
                     </span>
                   </Toggle>
                 </template>
@@ -147,6 +143,7 @@ import { currency } from '@/service/helper/format'
 import { ref } from 'vue'
 import { useCommonStore, useOrgStore } from '@/stores'
 import { openNewTab } from '@/service/function'
+// TAB NÀY ẨN BÊN NGỌC DUNG, BỎ QUA KHÔNG XỬ LÝ
 import { BBH_PAGE_MESS } from '@/configs/constants/botbanhang'
 // import { BBH_PAGE_MESS } from '@/service/constant/botbanhang'
 import { toast, toastError } from '@/service/helper/alert'

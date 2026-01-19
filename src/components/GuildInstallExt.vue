@@ -24,6 +24,7 @@
           <h3 class="py-1 px-2 rounded bg-slate-200">
             {{ $t('Hướng dẫn cài đặt') }}
           </h3>
+          <!-- GIỮ NGUYÊN VÌ PHẦN CÀI ĐẶT NÀY CHƯA CÓ -->
           <p>
             {{ $t('Xem Video hướng dẫn') }}:
             <a

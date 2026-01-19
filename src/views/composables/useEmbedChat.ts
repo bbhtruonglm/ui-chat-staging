@@ -26,6 +26,7 @@ export function useEmbedChat() {
       // thiết lập id
       SCRIPT.id = this.SCRIPT_ID
 
+      // HIỆN TẠI VẪN ĐỂ TRỎ VỀ BOTBANHANG ĐỂ BỘ PHÂN SUPPORT CHĂM SÓC
       // thiết lập id
       SCRIPT.src = '//chatbox-embed-sdk.botbanhang.vn/dist/sdk.min.js'
 
@@ -97,11 +98,10 @@ export function useEmbedChat() {
   }
   const $main = new Main()
 
-  
   onMounted(() => {
     // tiêm sdk vào dom
     $main.injectSdk()
-    
+
     // sự kiện inject bong bóng chat
     window.addEventListener('message', $main.initEmbedChat)
 

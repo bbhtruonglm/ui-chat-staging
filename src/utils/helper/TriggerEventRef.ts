@@ -11,7 +11,7 @@ export class TriggerEventRef {
 
     // nếu không có id thì thôi
     if (!CLIENT_ID) return
-
+    // CHƯA CHECK ĐƯỢC PHẦN NÀY
     /** link api */
     const URL = 'https://chatbox-public-v2.botbanhang.vn/app/send_message'
 
@@ -56,24 +56,31 @@ export class TriggerEventRef {
   }
 
   /** gửi tin nhắn đánh dấu đăng nhập với facebook */
-  async sendMessageLoginFacebook() {    
+  async sendMessageLoginFacebook() {
     this.sendMessage('Đã click đăng nhập với Facebook')
   }
 
   /** gửi tin nhắn đánh dấu đăng nhập với email */
   async sendMessageLoginEmail(email: string) {
-    this.sendMessage('Đã click đăng nhập với email \n Email: '+ email)
+    this.sendMessage('Đã click đăng nhập với email \n Email: ' + email)
   }
 
   /** gửi tin nhắn đánh dấu đăng ký với email */
   async sendMessageRegisterEmail(email: string) {
-    this.sendMessage('Đã đăng ký thành công với email \n Email: '+ email)
+    this.sendMessage('Đã đăng ký thành công với email \n Email: ' + email)
   }
 
   /** gửi tin nhắn đánh dấu tài khoản đăng nhập nhưng không có page */
-  async sendMessageLoginWithoutPage({ name, id}: { name?: string; id?: string }) {
+  async sendMessageLoginWithoutPage({
+    name,
+    id,
+  }: {
+    name?: string
+    id?: string
+  }) {
     /** nội dung tin nhắn sẽ gửi */
-    let message = 'Khách hàng đăng nhập nhưng chưa có Page \n Thông tin khách hàng:'
+    let message =
+      'Khách hàng đăng nhập nhưng chưa có Page \n Thông tin khách hàng:'
 
     // thêm tên khách vào nội dung tin nhắn
     if (name) message += `\n - Tên: ${name}`
