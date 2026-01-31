@@ -63,7 +63,6 @@ const inject_script_ref = ref<ComponentRef>()
 /**ref của thẻ pre chứa mã nhúng */
 const script_ref = ref<HTMLPreElement>()
 
-// HIỆN TẠI VẪN ĐỂ TRỎ VỀ BOTBANHANG ĐỂ BỘ PHÂN SUPPORT CHĂM SÓC
 /**tạo ra mã nhúng */
 function generateScript() {
   return `&lt;script src="https://chatbox-embed-sdk.botbanhang.vn/dist/sdk.min.js"&gt;&lt;/script&gt;

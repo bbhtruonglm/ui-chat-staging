@@ -293,7 +293,6 @@
                       }
                     )
                   }}
-                  <!-- TAB NÀY ẨN BÊN NGỌC DUNG, BỎ QUA KHÔNG XỬ LÝ -->
                   hotro@botbanhang.vn
                 </li>
               </ul>

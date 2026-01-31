@@ -405,7 +405,6 @@ async function pushWebNoti(conversation?: ConversationInfo) {
   /**tiêu đề */
   const TITLE = conversation?.client_name || commonStore.partner?.name || ''
 
-  // CHƯA CHECK ĐƯỢC
   /**link avatar của khách hàng */
   const AVATAR = `https://chatbox-static-v3.botbanhang.vn/app/facebook/avatar/${conversation?.fb_client_id}?page_id=${conversation?.fb_page_id}&staff_id=${chatbotUserStore.chatbot_user?.fb_staff_id}&width=64&height=64&type=${conversation?.platform_type}`
 

@@ -54,56 +54,39 @@ import Facebook from '@/components/OAuth/Facebook.vue'
 import { container } from 'tsyringe'
 import { Toast } from '@/utils/helper/Alert/Toast'
 
-/** instance toast để hiển thị thông báo */
 const $toast = container.resolve(Toast)
 
-/** danh sách pages Facebook mà user quản lý */
 const pages = ref<any[]>()
-
-/** page đang được chọn để xử lý */
 const selected_page = ref<any>()
 
-/** xóa token bbh của page */
+/**xóa token bbh */
 async function deleteBbhToken(page_id: string) {
-  // TAB NÀY ẨN BÊN NGỌC DUNG, BỎ QUA KHÔNG XỬ LÝ
-  // gọi API xóa token
   await fetch(
     `https://chatbox-merge-v2.botbanhang.vn/service/page/remove_bbh_token?page_id=${page_id}`
   )
 
-  // thông báo thành công
   $toast.success('ok')
 }
-
-/** đăng nhập chatbox bằng token fb */
+/**đăng nhập chatbox bằng token fb */
 async function loginChatbox(access_token: string) {
-  // log token để debug
   console.log(access_token)
 
-  /** gọi Facebook Graph API lấy danh sách pages */
   const RES = await fetch(
     `https://graph.facebook.com/v21.0/me/accounts?access_token=${access_token}&limit=200`
   )
 
-  /** parse response JSON */
   const PAGES = await RES.json()
 
-  // lưu danh sách pages vào state
   pages.value = PAGES?.data
 
-  // log để debug
   console.log(pages.value)
 }
 
-/** take control conversation của page */
 async function takeControl() {
-  // TAB NÀY ẨN BÊN NGỌC DUNG, BỎ QUA KHÔNG XỬ LÝ
-  // gọi API take control với page_id và access_token của page
   await fetch(
     `https://chatbox-merge-v2.botbanhang.vn/service/page/take_control_conversation?page_id=${selected_page.value?.id}&access_token=${selected_page.value?.access_token}`
   )
 
-  // thông báo thành công
   $toast.success('ok')
 }
 </script>

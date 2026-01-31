@@ -206,7 +206,6 @@ class Main {
       // lấy dữ liệu hội thoại
       res = await this.API_CONVERSATION.readConversations(
         PAGE_IDS,
-        orgStore.selected_org_id || '',
         {
           ...conversationStore.option_filter_page_data,
           ...OVERWRITE_FILTER,
@@ -432,7 +431,7 @@ class Main {
 
     // reset trạng thái load
     is_done.value = false
-    // load danh sách hội thoại
+
     await this.getConversation(is_first_time, is_pick_first)
 
     // nếu không cần đếm hội thoại thì thôi
@@ -661,8 +660,8 @@ onUnmounted(() => {
 watch(
   () => option_filter_page_data.value,
   (new_val, old_val) => {
-    console.log(new_val, old_val)
-
+    console.log(new_val, old_val);
+    
     $main.loadConversationFirstTime(true, true, true)
   },
   { deep: true }

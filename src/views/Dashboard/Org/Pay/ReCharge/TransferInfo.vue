@@ -138,7 +138,6 @@
   </div>
 </template>
 <script setup lang="ts">
-// TAB NÀY ẨN BÊN NGỌC DUNG, BỎ QUA KHÔNG XỬ LÝ
 import { BBH_PAGE_MESS } from '@/configs/constants/botbanhang'
 import { copyToClipboard } from '@/service/helper/copyWithAlert'
 import { BillingAppTxn } from '@/utils/api/Billing'
