@@ -84,12 +84,14 @@ export class N4SerivceAppConversation extends N4Serivce {
   /**
    * lấy danh sách hội thoại
    * @param page_ids danh sách id trang
+   * @param org_id id tổ chức
    * @param filter điều kiện lọc
    * @param limit số lượng hội thoại
    * @param after chỉ lấy hội thoại sau id này
    */
   async readConversations(
     page_ids: string[],
+    org_id: string,
     filter: FilterConversation,
     limit?: number,
     sort?: string,
@@ -98,6 +100,7 @@ export class N4SerivceAppConversation extends N4Serivce {
     // gọi api
     return this.post('read_conversation', {
       page_id: page_ids,
+      org_id,
       limit,
       after,
       sort,
@@ -135,8 +138,8 @@ export class N4SerivceAppConversation extends N4Serivce {
     return this.post('clear_ai_answer', { page_id, client_id })
   }
 
-  /** 
-   * lấy số lượng hội thoại 
+  /**
+   * lấy số lượng hội thoại
    * @param page_ids danh sách id trang
    * @param filter điều kiện lọc
    * @returns
@@ -145,9 +148,9 @@ export class N4SerivceAppConversation extends N4Serivce {
     page_ids: string[],
     filter: FilterConversation
   ): Promise<number> {
-    return this.post('count_conversation', { 
+    return this.post('count_conversation', {
       page_id: page_ids,
-      ...filter
+      ...filter,
     })
   }
 
@@ -158,6 +161,11 @@ export class N4SerivceAppConversation extends N4Serivce {
     is_disable: boolean,
     bot_resume_after?: number
   ): Promise<ConversationInfo> {
-    return this.post('manage_chatbot', { page_id, client_id, is_disable, bot_resume_after })
+    return this.post('manage_chatbot', {
+      page_id,
+      client_id,
+      is_disable,
+      bot_resume_after,
+    })
   }
 }
