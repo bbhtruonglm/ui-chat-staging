@@ -432,7 +432,7 @@ class Main {
 
     // reset trạng thái load
     is_done.value = false
-
+    // load danh sách hội thoại
     await this.getConversation(is_first_time, is_pick_first)
 
     // nếu không cần đếm hội thoại thì thôi
